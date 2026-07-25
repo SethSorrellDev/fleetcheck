@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -34,15 +35,15 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
+            .cors(Customizer.withDefaults())
             .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/").permitAll()
                 .requestMatchers("/h2-console/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
 
-                // Account administration: ADMIN only, every method including reads.
                 .requestMatchers("/api/accounts/**").hasRole("ADMIN")
 
-                // Reports log: drivers file reports but don't browse the history.
                 .requestMatchers(HttpMethod.GET, "/api/inspection-reports/**").hasAnyRole("MECHANIC", "FLEET_MANAGER", "ADMIN")
 
                 .requestMatchers(HttpMethod.POST, "/api/inspection-reports/*/complete-repair").hasRole("MECHANIC")
