@@ -1,3 +1,5 @@
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
+
 export interface ErrorResponse {
   timestamp: string
   status: number
@@ -31,7 +33,7 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
     ...options.headers,
   }
 
-  const response = await fetch(`/api${path}`, { ...options, headers })
+  const response = await fetch(`${API_BASE_URL}${path}`, { ...options, headers })
 
   if (response.status === 204) {
     return undefined as T
