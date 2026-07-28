@@ -6,6 +6,7 @@ import { DashboardPage } from './pages/DashboardPage'
 import { NewInspectionPage } from './pages/NewInspectionPage'
 import { ReportsListPage } from './pages/ReportsListPage'
 import { NewVehiclePage } from './pages/NewVehiclePage'
+import { NewDriverPage } from './pages/NewDriverPage'
 import { AccountsPage } from './pages/AccountsPage'
 import { MechanicQueuePage } from './pages/MechanicQueuePage'
 import { FleetOverviewPage } from './pages/FleetOverviewPage'
@@ -70,6 +71,14 @@ export default function App() {
           element={
             <ProtectedRoute allowedRoles={['MECHANIC', 'FLEET_MANAGER', 'ADMIN']}>
               <VehicleHistoryPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/drivers/new"
+          element={
+            <ProtectedRoute allowedRoles={['FLEET_MANAGER']}>
+              <NewDriverPage />
             </ProtectedRoute>
           }
         />

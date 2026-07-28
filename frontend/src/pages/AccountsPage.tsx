@@ -24,6 +24,9 @@ export function AccountsPage() {
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
 
+  const [linkSelections, setLinkSelections] = useState<Record<number, string>>({})
+  const [linkError, setLinkError] = useState<string | null>(null)
+
   function loadData() {
     setLoading(true)
     Promise.all([api.get<Account[]>('/accounts'), api.get<Driver[]>('/drivers')])
@@ -91,6 +94,26 @@ export function AccountsPage() {
       loadData()
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Could not update the account.')
+    }
+  }
+
+  async function handleLinkDriver(account: Account) {
+    const selected = linkSelections[account.id]
+    if (!selected) {
+      setLinkError('Select a driver to link first.')
+      return
+    }
+    setLinkError(null)
+    try {
+      await api.put(`/accounts/${account.id}`, {
+        username: account.username,
+        role: account.role,
+        driverId: Number(selected),
+        active: account.active,
+      })
+      loadData()
+    } catch (err) {
+      setLinkError(err instanceof Error ? err.message : 'Could not link the driver.')
     }
   }
 
@@ -170,6 +193,11 @@ export function AccountsPage() {
                 <option key={d.id} value={d.id}>{d.firstName} {d.lastName} ({d.employeeId})</option>
               ))}
             </select>
+            {drivers.length === 0 && (
+              <p className="mt-1 font-sans text-xs text-steel">
+                No driver records exist yet — add one from the dashboard first, or link this account afterward below.
+              </p>
+            )}
           </div>
         )}
 
@@ -195,10 +223,13 @@ export function AccountsPage() {
       {loadError && (
         <p className="mt-2 border-l-4 border-alert bg-alert/10 px-3 py-2 font-sans text-sm text-alert">{loadError}</p>
       )}
+      {linkError && (
+        <p className="mt-2 border-l-4 border-alert bg-alert/10 px-3 py-2 font-sans text-sm text-alert">{linkError}</p>
+      )}
 
       {!loading && !loadError && (
         <div className="mt-4 overflow-x-auto rounded border border-steel/30 bg-white">
-          <table className="w-full min-w-[600px] text-left font-sans text-sm">
+          <table className="w-full min-w-[700px] text-left font-sans text-sm">
             <thead>
               <tr className="border-b border-steel/30 font-mono text-xs uppercase tracking-wider text-steel">
                 <th className="px-4 py-3">Username</th>
@@ -213,7 +244,32 @@ export function AccountsPage() {
                 <tr key={a.id} className="border-b border-steel/10 last:border-0">
                   <td className="px-4 py-3 font-mono text-graphite">{a.username}</td>
                   <td className="px-4 py-3 font-mono text-xs text-steel">{roleLabels[a.role]}</td>
-                  <td className="px-4 py-3 text-steel">{driverNameFor(a.driverId)}</td>
+                  <td className="px-4 py-3 text-steel">
+                    {a.role === 'DRIVER' && a.driverId === null ? (
+                      <div className="flex items-center gap-2">
+                        <select
+                          value={linkSelections[a.id] ?? ''}
+                          onChange={(e) =>
+                            setLinkSelections((prev) => ({ ...prev, [a.id]: e.target.value }))
+                          }
+                          className="rounded border border-steel/40 bg-white px-2 py-1 font-mono text-xs text-graphite"
+                        >
+                          <option value="">Select driver…</option>
+                          {drivers.map((d) => (
+                            <option key={d.id} value={d.id}>{d.firstName} {d.lastName}</option>
+                          ))}
+                        </select>
+                        <button
+                          onClick={() => handleLinkDriver(a)}
+                          className="font-sans text-xs font-semibold uppercase text-safety hover:underline"
+                        >
+                          Link
+                        </button>
+                      </div>
+                    ) : (
+                      driverNameFor(a.driverId)
+                    )}
+                  </td>
                   <td className="px-4 py-3">
                     <span
                       className={`inline-block rounded border px-2 py-1 font-mono text-xs uppercase tracking-wide ${

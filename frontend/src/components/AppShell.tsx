@@ -23,6 +23,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               {isMechanic && <Link to="/queue" className="hover:text-safety">Queue</Link>}
               {canViewReports && <Link to="/vehicles" className="hover:text-safety">Fleet</Link>}
               {isManager && <Link to="/vehicles/new" className="hover:text-safety">Add Vehicle</Link>}
+              {isManager && <Link to="/drivers/new" className="hover:text-safety">Add Driver</Link>}
               {isAdmin && <Link to="/accounts" className="hover:text-safety">Accounts</Link>}
             </nav>
           </div>

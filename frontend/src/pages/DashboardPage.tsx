@@ -60,6 +60,14 @@ export function DashboardPage() {
             Add Vehicle
           </Link>
         )}
+        {isManager && (
+          <Link
+            to="/drivers/new"
+            className="inline-block rounded border-2 border-graphite px-6 py-3 font-sans text-sm font-semibold uppercase tracking-wide text-graphite transition hover:bg-graphite hover:text-paper"
+          >
+            Add Driver
+          </Link>
+        )}
         {isAdmin && (
           <Link
             to="/accounts"
