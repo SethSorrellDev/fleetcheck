@@ -1,6 +1,7 @@
 package com.fleetcheck.controller;
 
 import com.fleetcheck.dto.InspectionReportDTO;
+import com.fleetcheck.dto.PageResponse;
 import com.fleetcheck.service.InspectionReportService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -19,8 +20,20 @@ public class InspectionReportController {
     }
 
     @GetMapping
-    public List<InspectionReportDTO> getAll() {
-        return reportService.getAll();
+    public PageResponse<InspectionReportDTO> getPage(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return reportService.getPage(page, size);
+    }
+
+    @GetMapping("/queue")
+    public List<InspectionReportDTO> getQueue() {
+        return reportService.getQueue();
+    }
+
+    @GetMapping("/by-vehicle/{vehicleId}")
+    public List<InspectionReportDTO> getByVehicle(@PathVariable Long vehicleId) {
+        return reportService.getByVehicle(vehicleId);
     }
 
     @GetMapping("/{id}")

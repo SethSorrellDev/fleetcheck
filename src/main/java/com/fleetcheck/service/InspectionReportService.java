@@ -7,6 +7,7 @@ import com.fleetcheck.domain.Vehicle;
 import com.fleetcheck.domain.enums.RepairType;
 import com.fleetcheck.domain.enums.ReportStatus;
 import com.fleetcheck.dto.InspectionReportDTO;
+import com.fleetcheck.dto.PageResponse;
 import com.fleetcheck.exception.InvalidRequestException;
 import com.fleetcheck.exception.InvalidStatusTransitionException;
 import com.fleetcheck.exception.ResourceNotFoundException;
@@ -14,6 +15,9 @@ import com.fleetcheck.repository.DriverRepository;
 import com.fleetcheck.repository.InspectionReportRepository;
 import com.fleetcheck.repository.RepairOrderRepository;
 import com.fleetcheck.repository.VehicleRepository;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -37,8 +41,32 @@ public class InspectionReportService {
         this.repairOrderRepository = repairOrderRepository;
     }
 
-    public List<InspectionReportDTO> getAll() {
-        return reportRepository.findAll().stream().map(InspectionReportDTO::fromEntity).toList();
+    // Paginated: the one report list with genuinely unbounded growth
+    // (every driver, every shift, indefinitely). Sorted newest-first to
+    // match the ordering the frontend has always shown.
+    public PageResponse<InspectionReportDTO> getPage(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("inspectionDate").descending());
+        return PageResponse.from(
+                reportRepository.findAll(pageable).map(InspectionReportDTO::fromEntity)
+        );
+    }
+
+    // Unpaginated by design: "currently open repairs" is a naturally small,
+    // operationally-bounded set, not historical data that grows forever.
+    public List<InspectionReportDTO> getQueue() {
+        return reportRepository
+                .findByStatusIn(List.of(ReportStatus.REPAIR_REQUESTED, ReportStatus.REPAIR_COMPLETED))
+                .stream()
+                .map(InspectionReportDTO::fromEntity)
+                .toList();
+    }
+
+    // Unpaginated by design: one vehicle's own history is naturally bounded
+    // regardless of how large the overall reports table grows.
+    public List<InspectionReportDTO> getByVehicle(Long vehicleId) {
+        return reportRepository.findByVehicle_Id(vehicleId).stream()
+                .map(InspectionReportDTO::fromEntity)
+                .toList();
     }
 
     public InspectionReportDTO getById(Long id) {
