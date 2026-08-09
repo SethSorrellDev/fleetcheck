@@ -43,7 +43,7 @@ export function VehicleHistoryPage() {
     Promise.all([
       api.get<Vehicle>(`/vehicles/${vehicleId}`),
       api.get<VehicleDispatchStatus>(`/vehicles/${vehicleId}/dispatch-status`),
-      api.get<InspectionReport[]>('/inspection-reports'),
+      api.get<InspectionReport[]>(`/inspection-reports/by-vehicle/${vehicleId}`),
       api.get<Driver[]>('/drivers'),
       api.get<RepairOrder[]>('/repair-orders'),
       api.get<DamageMarking[]>('/damage-markings'),
@@ -51,7 +51,7 @@ export function VehicleHistoryPage() {
       .then(([vehicleData, dispatchData, reportsData, driversData, repairOrdersData, markingsData]) => {
         setVehicle(vehicleData)
         setDispatchStatus(dispatchData)
-        setReports(reportsData.filter((r) => r.vehicleId === vehicleId))
+        setReports(reportsData)
         setDrivers(driversData)
         setRepairOrders(repairOrdersData)
         setDamageMarkings(markingsData)

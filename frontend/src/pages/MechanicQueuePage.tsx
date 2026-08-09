@@ -23,7 +23,7 @@ export function MechanicQueuePage() {
   function loadData() {
     setLoading(true)
     Promise.all([
-      api.get<InspectionReport[]>('/inspection-reports'),
+      api.get<InspectionReport[]>('/inspection-reports/queue'),
       api.get<Vehicle[]>('/vehicles'),
       api.get<Driver[]>('/drivers'),
       api.get<RepairOrder[]>('/repair-orders'),
