@@ -2,7 +2,7 @@
 
 ![CI](https://github.com/SethSorrellDev/fleetcheck/actions/workflows/ci.yml/badge.svg)
 
-**Live demo:** _deployment in progress — link coming soon. See [DEPLOYMENT.md](DEPLOYMENT.md) for the full setup._
+**Live demo:** [fleetcheck-1.onrender.com](https://fleetcheck-1.onrender.com) — backend API at [fleetcheck-j4y2.onrender.com](https://fleetcheck-j4y2.onrender.com)
 
 A digital Driver Vehicle Inspection Report (DVIR) system built to replace a paper-and-carbon-copy process at a Cintas route-service operation.
 
@@ -89,7 +89,7 @@ Deployed on Render: a Spring Boot web service, a React static site, and a manage
 
 ## Roadmap
 
-- [ ] PostgreSQL migration + live deployment (Render) — in progress
+- [x] PostgreSQL migration + live deployment (Render)
 - [ ] PDF export of a completed DVIR (paper as fallback, not default)
 - [ ] Photo attachments for damage markings
 
