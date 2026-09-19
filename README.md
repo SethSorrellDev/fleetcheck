@@ -38,6 +38,11 @@ stateDiagram-v2
 
 A vehicle stays blocked from dispatch for any open `SAFETY`/`BOTH` repair until it reaches `REVIEWED_CLOSED` — repaired-but-unreviewed is still blocked, matching the physical form's two-signature requirement (driver reports → mechanic repairs → driver reviews).
 
+## Documentation
+
+- [ARCHITECTURE.md](ARCHITECTURE.md) — layered design, domain model, and the reasoning behind the key decisions (the status state machine, derived dispatch status, RBAC layout, DTO boundary)
+- [API_REFERENCE.md](API_REFERENCE.md) — full endpoint reference: routes, required roles, request/response shapes, error format
+
 ## Tech stack
 
 | Layer | Stack |
