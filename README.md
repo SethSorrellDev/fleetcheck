@@ -4,6 +4,8 @@
 
 **Live demo:** [fleetcheck-1.onrender.com](https://fleetcheck-1.onrender.com) — backend API at [fleetcheck-j4y2.onrender.com](https://fleetcheck-j4y2.onrender.com)
 
+Hosted on Render's free tier, so the first request after a period of inactivity may take 30-60 seconds to wake up.
+
 A digital Driver Vehicle Inspection Report (DVIR) system built to replace a paper-and-carbon-copy process at a Cintas route-service operation.
 
 ## The problem
@@ -19,7 +21,7 @@ Drivers currently fill out a paper DVIR booklet at the start and end of every sh
 - **Mechanic repair queue** — an actionable, three-stage queue (needs repair order → ready to complete → awaiting driver review), not just a filtered list
 - **Fleet & vehicle history views** — a fleet-wide dispatch-status table and a full per-vehicle inspection/repair/damage timeline
 - **Account administration** — admin-only user management with deactivation (not hard-delete), write-only password handling
-- **Test coverage** — unit tests (Mockito) on the workflow engine, integration tests (MockMvc + Spring Security Test) exercising the full DVIR lifecycle through real HTTP and real authorization rules
+- **Test coverage** — 37 backend tests (JUnit 5 + Mockito unit tests on the workflow engine; MockMvc + Spring Security Test integration tests exercising the full DVIR lifecycle through real HTTP and real authorization rules) and 22 frontend tests (Vitest + React Testing Library)
 - **CI/CD** — GitHub Actions runs the full test suite on every push and pull request; deployed on Render with a separate production Spring profile, PostgreSQL, and CORS-aware cross-origin setup
 
 ## Inspection report workflow
@@ -42,11 +44,32 @@ A vehicle stays blocked from dispatch for any open `SAFETY`/`BOTH` repair until 
 |---|---|
 | Backend | Java 21, Spring Boot 3.5, Spring Data JPA, Spring Security, H2 (dev) / PostgreSQL (prod) |
 | Frontend | React 18, TypeScript, Vite, Tailwind CSS v4 |
-| Testing | JUnit 5, Mockito, MockMvc, Spring Security Test |
+| Testing | JUnit 5, Mockito, MockMvc, Spring Security Test, Vitest, React Testing Library |
 | CI/CD | GitHub Actions, Render (web service + static site + managed Postgres) |
 
 ## Project structure
-fleetcheck/ ├── src/ # Spring Boot backend │ ├── main/java/com/fleetcheck/ │ │ ├── domain/ # JPA entities and enums │ │ ├── dto/ # Flat request/response DTOs │ │ ├── repository/ # Spring Data repositories │ │ ├── service/ # Business logic, workflow rules │ │ ├── controller/ # REST endpoints │ │ ├── security/ # Spring Security config, auth │ │ ├── config/ # CORS and OpenAPI configuration │ │ ├── exception/ # Custom exceptions, global handler │ │ └── seed/ # Dev seed data / production bootstrap admin │ └── test/ # Unit + integration tests └── frontend/ # React + TypeScript SPA └── src/ ├── api/ # Typed API client ├── auth/ # Auth context, protected routes ├── components/ # Shared UI (app shell, damage editor) └── pages/ # Route-level views
+
+```
+fleetcheck/
+├── src/
+│   ├── main/java/com/fleetcheck/
+│   │   ├── domain/       # JPA entities and enums
+│   │   ├── dto/          # Flat request/response DTOs
+│   │   ├── repository/   # Spring Data repositories
+│   │   ├── service/      # Business logic, workflow rules
+│   │   ├── controller/   # REST endpoints
+│   │   ├── security/     # Spring Security config, auth
+│   │   ├── config/       # CORS and OpenAPI configuration
+│   │   ├── exception/    # Custom exceptions, global handler
+│   │   └── seed/         # Dev seed data / production bootstrap admin
+│   └── test/              # Unit + integration tests
+└── frontend/               # React + TypeScript SPA
+    └── src/
+        ├── api/           # Typed API client
+        ├── auth/          # Auth context, protected routes
+        ├── components/    # Shared UI (app shell, damage editor)
+        └── pages/         # Route-level views
+```
 
 ## Getting started (local development)
 
@@ -56,7 +79,7 @@ fleetcheck/ ├── src/ # Spring Boot backend │ ├── main/java/com
 ```bash
 mvn spring-boot:run
 ```
-Runs on `http://localhost:8080` using an in-memory H2 database. Seed data and dev accounts load automatically on first boot — **this seeding only happens locally**; production uses a single bootstrap admin account instead (see [DEPLOYMENT.md](DEPLOYMENT.md)).
+Runs on `http://localhost:8080` using an in-memory H2 database. Seed data and dev accounts load automatically on first boot — **this seeding only happens locally**; production uses a single bootstrap admin account created from environment variables instead (see Deployment, below).
 
 **Frontend**
 ```bash
@@ -83,9 +106,31 @@ Runs on `http://localhost:5173`, proxying `/api` requests to the backend.
 mvn test
 ```
 
+```bash
+cd frontend
+npm test
+```
+
 ## Deployment
 
-Deployed on Render: a Spring Boot web service, a React static site, and a managed PostgreSQL database, talking cross-origin over CORS. Full architecture, environment variable reference, and step-by-step setup in **[DEPLOYMENT.md](DEPLOYMENT.md)**.
+Deployed on Render: a Dockerized Spring Boot web service, a React static site, and a managed PostgreSQL database, talking cross-origin over CORS.
+
+**Backend** builds from the repo's `Dockerfile` (Render has no native Java runtime) and reads its configuration entirely from environment variables via the `prod` Spring profile:
+
+| Variable | Purpose |
+|---|---|
+| `SPRING_PROFILES_ACTIVE=prod` | Activates the production profile (PostgreSQL, no dev seeding) |
+| `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` | Managed PostgreSQL connection |
+| `ADMIN_BOOTSTRAP_USERNAME`, `ADMIN_BOOTSTRAP_PASSWORD` | Creates the single initial admin account on first boot if the accounts table is empty; the app refuses to start without them in `prod` |
+| `CORS_ALLOWED_ORIGINS` | Comma-separated list of origins allowed to call the API (e.g. the frontend's Render URL) |
+
+Once the bootstrap admin exists, it's used to sign in and create real driver/mechanic/manager accounts through the Accounts page — no other accounts are seeded in production.
+
+**Frontend** is a static site build (`npm run build`) with one build-time variable:
+
+| Variable | Purpose |
+|---|---|
+| `VITE_API_BASE_URL` | Base URL of the deployed backend API |
 
 ## Roadmap
 
