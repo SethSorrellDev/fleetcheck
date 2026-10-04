@@ -26,6 +26,7 @@ export function AccountsPage() {
 
   const [linkSelections, setLinkSelections] = useState<Record<number, string>>({})
   const [linkError, setLinkError] = useState<string | null>(null)
+  const [emailEdits, setEmailEdits] = useState<Record<number, string>>({})
 
   function loadData() {
     setLoading(true)
@@ -116,6 +117,27 @@ export function AccountsPage() {
       loadData()
     } catch (err) {
       setLinkError(err instanceof Error ? err.message : 'Could not link the driver.')
+    }
+  }
+
+  async function handleSetEmail(account: Account) {
+    const value = (emailEdits[account.id] ?? '').trim()
+    if (!value) {
+      setLinkError('Enter an email first.')
+      return
+    }
+    setLinkError(null)
+    try {
+      await api.put(`/accounts/${account.id}`, {
+        username: account.username,
+        email: value,
+        role: account.role,
+        driverId: account.driverId,
+        active: account.active,
+      })
+      loadData()
+    } catch (err) {
+      setLinkError(err instanceof Error ? err.message : 'Could not set the email.')
     }
   }
 
@@ -246,7 +268,27 @@ export function AccountsPage() {
               {accounts.map((a) => (
                 <tr key={a.id} className="border-b border-steel/10 last:border-0">
                   <td className="px-4 py-3 font-mono text-graphite">{a.username}</td>
-                  <td className="px-4 py-3 font-mono text-xs text-steel">{a.email}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-steel">
+                    {a.email ? (
+                      a.email
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="email"
+                          placeholder="set email…"
+                          value={emailEdits[a.id] ?? ''}
+                          onChange={(e) => setEmailEdits((prev) => ({ ...prev, [a.id]: e.target.value }))}
+                          className="w-44 rounded border border-steel/40 bg-white px-2 py-1 font-mono text-xs text-graphite"
+                        />
+                        <button
+                          onClick={() => handleSetEmail(a)}
+                          className="font-sans text-xs font-semibold uppercase text-safety hover:underline"
+                        >
+                          Set
+                        </button>
+                      </div>
+                    )}
+                  </td>
                   <td className="px-4 py-3 font-mono text-xs text-steel">{roleLabels[a.role]}</td>
                   <td className="px-4 py-3 text-steel">
                     {a.role === 'DRIVER' && a.driverId === null ? (
