@@ -10,8 +10,8 @@ React 18, TypeScript, Vite, React Router, Tailwind CSS v4. Tests with Vitest + R
 
 ```
 src/
-├── api/          # Typed fetch client (client.ts) — adds the Basic auth header, throws ApiError on non-2xx
-├── auth/         # AuthContext (session-storage credentials, current-user state), ProtectedRoute (role gate)
+├── api/          # Typed fetch client (client.ts) — adds the Bearer token header, throws ApiError on non-2xx
+├── auth/         # AuthContext (session-storage tokens, current-user state), tokens.ts (identity-service sign-in and refresh), ProtectedRoute (role gate)
 ├── components/   # Shared UI — AppShell (nav/layout), DamageMarkerEditor (click-to-place damage diagram)
 └── pages/        # One component per route (see Routes, below)
 ```
@@ -37,7 +37,7 @@ These match the backend's own role enforcement (see `SecurityConfig` in the back
 
 ## Auth
 
-There's no token endpoint: the app sends HTTP Basic credentials (base64-encoded `username:password`) on every API request. `AuthContext` base64-encodes the credentials once at login, stores them in `sessionStorage` (cleared when the tab closes, never `localStorage`), and confirms them by calling `GET /api/me` — a failed call clears the stored credentials and surfaces "Invalid username or password." On reload, `AuthContext` re-validates whatever's in `sessionStorage` against `/api/me` before rendering any protected route, rather than trusting stale local state.
+Sign-in goes through the shared identity service, not FleetCheck's backend. `tokens.ts` posts the email and password to the identity service's `/auth/login`, keeps the access and refresh tokens in `sessionStorage` (cleared when the tab closes, never `localStorage`), and API requests carry the access token as a Bearer header. When the access token expires the app refreshes it; if that fails, the session is cleared and the user is sent back to the login page. `AuthContext` confirms who is signed in by calling `GET /api/me`, which also returns the user's FleetCheck role (the identity service holds no roles). On reload, it re-validates whatever tokens are in `sessionStorage` before rendering any protected route, rather than trusting stale local state. The identity service runs on a paid instance that stays awake, so sign-in should be quick.
 
 ## Getting started
 
@@ -70,6 +70,7 @@ Type-checks (`tsc -b`) then builds a static bundle to `dist/`. The only runtime 
 | Variable | Purpose |
 |---|---|
 | `VITE_API_BASE_URL` | Base URL of the backend API. Falls back to `/api` (the dev proxy target) if unset. |
+| `VITE_IDENTITY_URL` | Base URL of the identity service used for sign-in. Falls back to `http://localhost:8081` if unset. |
 
 In production this is deployed as a Render static site pointed at the FleetCheck backend — see the [root README](../README.md#deployment) for the full env var reference.
 

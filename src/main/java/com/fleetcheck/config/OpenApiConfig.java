@@ -12,13 +12,14 @@ public class OpenApiConfig {
 
     @Bean
     public OpenAPI fleetCheckOpenAPI() {
-        String schemeName = "basicAuth";
+        String schemeName = "bearerAuth";
         return new OpenAPI()
                 .addSecurityItem(new SecurityRequirement().addList(schemeName))
                 .components(new Components().addSecuritySchemes(schemeName,
                         new SecurityScheme()
                                 .name(schemeName)
                                 .type(SecurityScheme.Type.HTTP)
-                                .scheme("basic")));
+                                .scheme("bearer")
+                                .bearerFormat("JWT")));
     }
 }
