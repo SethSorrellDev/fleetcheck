@@ -99,7 +99,7 @@ class SecurityAuthorizationIntegrationTest {
                         .with(user("manager1").roles("FLEET_MANAGER"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"username":"blockeduser","password":"secret123","role":"MECHANIC","active":true}
+                                {"username":"blockeduser","email":"newmechanic@example.com","role":"MECHANIC","active":true}
                                 """))
                 .andExpect(status().isForbidden());
     }
@@ -110,7 +110,7 @@ class SecurityAuthorizationIntegrationTest {
                         .with(user("admin1").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"username":"newmechanic","password":"secret123","role":"MECHANIC","active":true}
+                                {"username":"newmechanic","email":"newmechanic@example.com","role":"MECHANIC","active":true}
                                 """))
                 .andExpect(status().isCreated());
     }
