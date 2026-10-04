@@ -6,6 +6,8 @@ import { registerWithIdentity } from '../auth/tokens'
 export function LoginPage() {
   const { user, login } = useAuth()
   const [mode, setMode] = useState<'signin' | 'register'>('signin')
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -21,7 +23,7 @@ export function LoginPage() {
     setSubmitting(true)
     try {
       if (mode === 'register') {
-        await registerWithIdentity(email, password)
+        await registerWithIdentity(email, password, firstName, lastName)
       }
       await login(email, password)
     } catch (err) {
@@ -44,6 +46,37 @@ export function LoginPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {mode === 'register' && (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label htmlFor="firstName" className="mb-1 block font-sans text-sm font-medium text-graphite">
+                  First name
+                </label>
+                <input
+                  id="firstName"
+                  type="text"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  required
+                  className="w-full rounded border border-steel/40 bg-white px-3 py-2 font-mono text-sm text-graphite outline-none focus:border-safety focus:ring-2 focus:ring-safety/30"
+                />
+              </div>
+              <div>
+                <label htmlFor="lastName" className="mb-1 block font-sans text-sm font-medium text-graphite">
+                  Last name
+                </label>
+                <input
+                  id="lastName"
+                  type="text"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  required
+                  className="w-full rounded border border-steel/40 bg-white px-3 py-2 font-mono text-sm text-graphite outline-none focus:border-safety focus:ring-2 focus:ring-safety/30"
+                />
+              </div>
+            </div>
+          )}
+
           <div>
             <label htmlFor="email" className="mb-1 block font-sans text-sm font-medium text-graphite">
               Email

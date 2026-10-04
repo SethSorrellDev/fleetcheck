@@ -43,13 +43,18 @@ export async function loginWithIdentity(email: string, password: string): Promis
 }
 
 // Creates the identity-service account only. The caller signs in afterwards.
-export async function registerWithIdentity(email: string, password: string): Promise<void> {
+export async function registerWithIdentity(
+  email: string,
+  password: string,
+  firstName: string,
+  lastName: string,
+): Promise<void> {
   let response: Response
   try {
     response = await fetch(`${IDENTITY_URL}/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: email.trim(), password }),
+      body: JSON.stringify({ email: email.trim(), password, firstName: firstName.trim(), lastName: lastName.trim() }),
     })
   } catch {
     throw new Error('Could not reach the sign-in service. It may be waking up, so try again in a minute.')
@@ -58,7 +63,7 @@ export async function registerWithIdentity(email: string, password: string): Pro
     throw new Error('An account with that email already exists. Try signing in instead.')
   }
   if (response.status === 400) {
-    throw new Error('That email or password was rejected. Use a valid email and a longer password.')
+    throw new Error('That sign-up was rejected. Check your name, email and password (use a longer password).')
   }
   if (!response.ok) {
     throw new Error('Could not create the account. Please try again.')
