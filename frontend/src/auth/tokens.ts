@@ -42,6 +42,29 @@ export async function loginWithIdentity(email: string, password: string): Promis
   storeTokens(await response.json())
 }
 
+// Creates the identity-service account only. The caller signs in afterwards.
+export async function registerWithIdentity(email: string, password: string): Promise<void> {
+  let response: Response
+  try {
+    response = await fetch(`${IDENTITY_URL}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email.trim(), password }),
+    })
+  } catch {
+    throw new Error('Could not reach the sign-in service. It may be waking up, so try again in a minute.')
+  }
+  if (response.status === 409) {
+    throw new Error('An account with that email already exists. Try signing in instead.')
+  }
+  if (response.status === 400) {
+    throw new Error('That email or password was rejected. Use a valid email and a longer password.')
+  }
+  if (!response.ok) {
+    throw new Error('Could not create the account. Please try again.')
+  }
+}
+
 let inFlight: Promise<boolean> | null = null
 
 // Shared refresh: concurrent 401s trigger one request. Resolves true if new tokens were stored.

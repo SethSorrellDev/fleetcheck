@@ -1,9 +1,11 @@
 import { useState, type FormEvent } from 'react'
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
+import { registerWithIdentity } from '../auth/tokens'
 
 export function LoginPage() {
   const { user, login } = useAuth()
+  const [mode, setMode] = useState<'signin' | 'register'>('signin')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -18,6 +20,9 @@ export function LoginPage() {
     setError(null)
     setSubmitting(true)
     try {
+      if (mode === 'register') {
+        await registerWithIdentity(email, password)
+      }
       await login(email, password)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed.')
@@ -79,9 +84,28 @@ export function LoginPage() {
             disabled={submitting}
             className="w-full rounded bg-graphite px-4 py-2 font-sans text-sm font-semibold uppercase tracking-wide text-paper transition hover:bg-graphite/90 disabled:opacity-50"
           >
-            {submitting ? 'Signing in…' : 'Sign in'}
+            {submitting
+              ? mode === 'register' ? 'Creating account…' : 'Signing in…'
+              : mode === 'register' ? 'Create account' : 'Sign in'}
           </button>
         </form>
+
+        <button
+          type="button"
+          onClick={() => {
+            setMode(mode === 'signin' ? 'register' : 'signin')
+            setError(null)
+          }}
+          className="mt-4 font-sans text-sm text-steel underline hover:text-graphite"
+        >
+          {mode === 'signin' ? 'Create an account' : 'Already have an account? Sign in'}
+        </button>
+
+        {mode === 'register' && (
+          <p className="mt-3 font-sans text-xs text-steel">
+            New accounts need a FleetCheck administrator to assign a role before they can use the app.
+          </p>
+        )}
 
       </div>
     </div>
