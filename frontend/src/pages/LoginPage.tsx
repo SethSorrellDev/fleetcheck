@@ -4,7 +4,7 @@ import { useAuth } from '../auth/AuthContext'
 
 export function LoginPage() {
   const { user, login } = useAuth()
-  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
@@ -18,7 +18,7 @@ export function LoginPage() {
     setError(null)
     setSubmitting(true)
     try {
-      await login(username, password)
+      await login(email, password)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed.')
     } finally {
@@ -40,14 +40,14 @@ export function LoginPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="username" className="mb-1 block font-sans text-sm font-medium text-graphite">
-              Username
+            <label htmlFor="email" className="mb-1 block font-sans text-sm font-medium text-graphite">
+              Email
             </label>
             <input
-              id="username"
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
               autoFocus
               className="w-full rounded border border-steel/40 bg-white px-3 py-2 font-mono text-sm text-graphite outline-none focus:border-safety focus:ring-2 focus:ring-safety/30"
@@ -83,9 +83,6 @@ export function LoginPage() {
           </button>
         </form>
 
-        <p className="mt-6 font-mono text-xs text-steel/70">
-          Dev accounts: driver1 / driver2 / mechanic1 / manager1 — password123
-        </p>
       </div>
     </div>
   )

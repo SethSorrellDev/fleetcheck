@@ -29,6 +29,7 @@ export interface Driver {
 export interface Account {
   id: number
   username: string
+  email: string
   role: Role
   driverId: number | null
   active: boolean
