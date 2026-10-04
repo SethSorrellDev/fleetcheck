@@ -6,10 +6,10 @@ For the reasoning behind the workflow states and the role rules, see [ARCHITECTU
 
 ## Authentication
 
-Every route except `/`, `/swagger-ui/**`, `/v3/api-docs/**`, and `/h2-console/**` (local only) requires **HTTP Basic** auth. Send credentials on every request:
+Every route except `/`, `/swagger-ui/**`, `/v3/api-docs/**`, and `/h2-console/**` (local only) requires a **Bearer access token** issued by identity-service (`POST /auth/login` there; refresh with `POST /auth/token/refresh`). Refresh tokens are rejected. A valid token whose email has no active FleetCheck account gets 403. Send the token on every request:
 
 ```
-Authorization: Basic base64(username:password)
+Authorization: Bearer <access token>
 ```
 
 An unauthenticated request to a protected route returns **401**:
@@ -43,7 +43,7 @@ All errors raised by the application (as opposed to Spring Security's own 401/40
 |---|---|
 | 400 | Bean-validation failure (`validationErrors` is a populated list of `"field: message"` strings) or a business-rule violation, e.g. missing `repairType` when `requiresRepair` is true |
 | 404 | Referenced resource doesn't exist |
-| 409 | Duplicate unique field (unit number, employee ID, username) or an out-of-order status transition |
+| 409 | Duplicate unique field (unit number, employee ID, username, email) or an out-of-order status transition |
 | 500 | Unexpected server error |
 
 ## Current user
@@ -120,7 +120,7 @@ FleetCheck API is running.
 { "id": 3, "firstName": "Alex", "lastName": "Rivera", "employeeId": "EMP-2201", "active": true }
 ```
 
-`employeeId` is unique — a duplicate returns 409. This is the roster record; the login (username/password/role) is a separate `Account` resource, see below.
+`employeeId` is unique — a duplicate returns 409. This is the roster record; the login (email and role) is a separate `Account` resource, see below.
 
 ## Inspection reports — `/api/inspection-reports`
 
@@ -250,7 +250,7 @@ No `DELETE` — accounts are disabled via `active: false`, not removed (see ARCH
 **AccountDTO**
 
 ```json
-{ "id": 5, "username": "driver2", "password": null, "role": "DRIVER", "driverId": 3, "active": true }
+{ "id": 5, "username": "driver2", "email": "driver2@example.com", "role": "DRIVER", "driverId": 3, "active": true }
 ```
 
-`password` is **write-only**: required (non-blank) on create, optional on update (omit or leave blank to keep the existing password), and always `null` on every response — the server never sends a password or its hash back, under any circumstance. `driverId` is optional and only meaningful for `DRIVER`-role accounts; a duplicate `username` returns 409.
+An `Account` is a role assignment, not a credential: there is no password field. `email` is required, stored lowercase, and unique; the person signs in through identity-service with that email, and the first login links their identity to the row. `username` is a display name. `driverId` is optional and only meaningful for `DRIVER`-role accounts; a duplicate `username` or `email` returns 409.

@@ -84,7 +84,7 @@ fleetcheck/
 ```bash
 mvn spring-boot:run
 ```
-Runs on `http://localhost:8080` using an in-memory H2 database. Seed data and dev accounts load automatically on first boot — **this seeding only happens locally**; production uses a single bootstrap admin account created from environment variables instead (see Deployment, below).
+Runs on `http://localhost:8080` using an in-memory H2 database. Demo data loads automatically on first boot — **this seeding only happens locally**. Production seeds nothing except one bootstrap admin, identified by email (see Deployment, below).
 
 **Frontend**
 ```bash
@@ -94,14 +94,18 @@ npm run dev
 ```
 Runs on `http://localhost:5173`, proxying `/api` requests to the backend.
 
-**Dev accounts** (local only, password: `password123` for all)
+**Authentication.** FleetCheck has no passwords of its own. Sign-in goes through the shared [identity-service](https://identity-service-c5ab.onrender.com), which issues RS256-signed JWTs. The backend verifies each access token against identity-service's public keys (JWKS) and rejects refresh tokens. FleetCheck keeps only the *role*: each `Account` row holds an email and a role, and the first successful sign-in with that email links the row to the person's identity-service ID. A valid identity with no matching active account gets a 403 ("isn't authorized to use FleetCheck") until an admin adds their email on the Accounts page.
 
-| Username | Role |
+**Local dev accounts.** The local seed creates role rows with these emails (no passwords exist):
+
+| Email | Role |
 |---|---|
-| `driver1`, `driver2` | Driver |
-| `mechanic1` | Mechanic |
-| `manager1` | Fleet Manager |
-| `admin1` | Admin |
+| `driver1@demo.fleetcheck.local`, `driver2@demo.fleetcheck.local` | Driver |
+| `mechanic1@demo.fleetcheck.local` | Mechanic |
+| `manager1@demo.fleetcheck.local` | Fleet Manager |
+| `admin1@demo.fleetcheck.local` | Admin |
+
+To sign in locally, run identity-service on `http://localhost:8081` (the default for both the backend and the frontend), use **Create an account** on the login page with one of the emails above, then sign in. The first login links that identity to the seeded row.
 
 **API docs:** interactive Swagger UI at `http://localhost:8080/swagger-ui.html` once the backend is running.
 
@@ -126,10 +130,11 @@ Deployed on Render: a Dockerized Spring Boot web service, a React static site, a
 |---|---|
 | `SPRING_PROFILES_ACTIVE=prod` | Activates the production profile (PostgreSQL, no dev seeding) |
 | `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` | Managed PostgreSQL connection |
-| `ADMIN_BOOTSTRAP_USERNAME`, `ADMIN_BOOTSTRAP_PASSWORD` | Creates the single initial admin account on first boot if the accounts table is empty; the app refuses to start without them in `prod` |
+| `IDENTITY_JWKS_URI` | identity-service's public key endpoint (`https://identity-service-c5ab.onrender.com/.well-known/jwks.json`); the backend uses it to verify access tokens |
+| `ADMIN_BOOTSTRAP_EMAIL` | Email of the first admin. Creates an ADMIN account row for that email if none exists; sign in through identity-service to link it. The app refuses to start in `prod` with no accounts and this unset |
 | `CORS_ALLOWED_ORIGINS` | Comma-separated list of origins allowed to call the API (e.g. the frontend's Render URL) |
 
-Once the bootstrap admin exists, it's used to sign in and create real driver/mechanic/manager accounts through the Accounts page — no other accounts are seeded in production.
+Once the bootstrap admin has signed in, use the Accounts page to add driver/mechanic/manager roles by email. Each person creates their identity-service account with that same email (the login page has a **Create an account** link). The frontend needs `VITE_IDENTITY_URL` set at build time, and identity-service must list the frontend's origin in its `CORS_ALLOWED_ORIGINS`.
 
 **Frontend** is a static site build (`npm run build`) with one build-time variable:
 
