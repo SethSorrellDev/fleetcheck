@@ -5,7 +5,6 @@ import com.fleetcheck.domain.enums.*;
 import com.fleetcheck.repository.*;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -21,22 +20,19 @@ public class DataSeeder implements CommandLineRunner {
     private final InspectionReportRepository reportRepository;
     private final RepairOrderRepository repairOrderRepository;
     private final DamageMarkingRepository damageMarkingRepository;
-    private final PasswordEncoder passwordEncoder;
 
     public DataSeeder(VehicleRepository vehicleRepository,
                        DriverRepository driverRepository,
                        AccountRepository accountRepository,
                        InspectionReportRepository reportRepository,
                        RepairOrderRepository repairOrderRepository,
-                       DamageMarkingRepository damageMarkingRepository,
-                       PasswordEncoder passwordEncoder) {
+                       DamageMarkingRepository damageMarkingRepository) {
         this.vehicleRepository = vehicleRepository;
         this.driverRepository = driverRepository;
         this.accountRepository = accountRepository;
         this.reportRepository = reportRepository;
         this.repairOrderRepository = repairOrderRepository;
         this.damageMarkingRepository = damageMarkingRepository;
-        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
