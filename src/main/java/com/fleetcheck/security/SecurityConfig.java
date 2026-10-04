@@ -7,19 +7,12 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
 
     @Bean
     public AuthenticationEntryPoint authenticationEntryPoint() {
@@ -32,7 +25,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http,
+                                           AccountJwtAuthenticationConverter jwtConverter) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
             .cors(Customizer.withDefaults())
@@ -42,6 +36,7 @@ public class SecurityConfig {
                 .requestMatchers("/h2-console/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
 
+                .requestMatchers("/api/me").authenticated()
                 .requestMatchers("/api/accounts/**").hasRole("ADMIN")
 
                 .requestMatchers(HttpMethod.GET, "/api/inspection-reports/**").hasAnyRole("MECHANIC", "FLEET_MANAGER", "ADMIN")
@@ -68,10 +63,13 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.PUT, "/api/drivers/**").hasRole("FLEET_MANAGER")
                 .requestMatchers(HttpMethod.DELETE, "/api/drivers/**").hasRole("FLEET_MANAGER")
 
-                .requestMatchers(HttpMethod.GET, "/api/**").authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/**")
+                    .hasAnyRole("DRIVER", "MECHANIC", "FLEET_MANAGER", "ADMIN")
                 .anyRequest().authenticated()
             )
-            .httpBasic(basic -> basic.authenticationEntryPoint(authenticationEntryPoint()));
+            .oauth2ResourceServer(oauth -> oauth
+                .authenticationEntryPoint(authenticationEntryPoint())
+                .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtConverter)));
 
         return http.build();
     }

@@ -5,7 +5,6 @@ import com.fleetcheck.domain.enums.*;
 import com.fleetcheck.repository.*;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -21,22 +20,19 @@ public class DataSeeder implements CommandLineRunner {
     private final InspectionReportRepository reportRepository;
     private final RepairOrderRepository repairOrderRepository;
     private final DamageMarkingRepository damageMarkingRepository;
-    private final PasswordEncoder passwordEncoder;
 
     public DataSeeder(VehicleRepository vehicleRepository,
                        DriverRepository driverRepository,
                        AccountRepository accountRepository,
                        InspectionReportRepository reportRepository,
                        RepairOrderRepository repairOrderRepository,
-                       DamageMarkingRepository damageMarkingRepository,
-                       PasswordEncoder passwordEncoder) {
+                       DamageMarkingRepository damageMarkingRepository) {
         this.vehicleRepository = vehicleRepository;
         this.driverRepository = driverRepository;
         this.accountRepository = accountRepository;
         this.reportRepository = reportRepository;
         this.repairOrderRepository = repairOrderRepository;
         this.damageMarkingRepository = damageMarkingRepository;
-        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -88,23 +84,23 @@ public class DataSeeder implements CommandLineRunner {
                 .firstName("Devon").lastName("Palmer").employeeId("E11002").active(true).build());
 
         accountRepository.save(Account.builder()
-                .username("driver1").password(passwordEncoder.encode("password123"))
+                .username("driver1").email("driver1@demo.fleetcheck.local")
                 .role(Role.DRIVER).driver(d1).active(true).build());
 
         accountRepository.save(Account.builder()
-                .username("driver2").password(passwordEncoder.encode("password123"))
+                .username("driver2").email("driver2@demo.fleetcheck.local")
                 .role(Role.DRIVER).driver(d2).active(true).build());
 
         accountRepository.save(Account.builder()
-                .username("mechanic1").password(passwordEncoder.encode("password123"))
+                .username("mechanic1").email("mechanic1@demo.fleetcheck.local")
                 .role(Role.MECHANIC).active(true).build());
 
         accountRepository.save(Account.builder()
-                .username("manager1").password(passwordEncoder.encode("password123"))
+                .username("manager1").email("manager1@demo.fleetcheck.local")
                 .role(Role.FLEET_MANAGER).active(true).build());
 
         accountRepository.save(Account.builder()
-                .username("admin1").password(passwordEncoder.encode("password123"))
+                .username("admin1").email("admin1@demo.fleetcheck.local")
                 .role(Role.ADMIN).active(true).build());
 
         reportRepository.save(InspectionReport.builder()
@@ -174,6 +170,6 @@ public class DataSeeder implements CommandLineRunner {
                 .driverSignedAt(LocalDateTime.of(2026, 7, 15, 6, 40)).build());
 
         System.out.println(">>> Seeded 5 vehicles, 4 drivers, 5 accounts, 5 inspection reports (all statuses), 3 damage markings");
-        System.out.println(">>> Accounts: driver1/driver2/mechanic1/manager1/admin1 (password: password123)");
+        System.out.println(">>> Accounts: driver1/driver2/mechanic1/manager1/admin1 (emails: <username>@demo.fleetcheck.local)");
     }
 }

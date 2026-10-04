@@ -5,44 +5,52 @@ import com.fleetcheck.domain.enums.Role;
 import com.fleetcheck.repository.AccountRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+
+import java.util.Locale;
 
 @Component
 @Profile("prod")
 public class ProdAdminSeeder implements CommandLineRunner {
 
     private final AccountRepository accountRepository;
-    private final PasswordEncoder passwordEncoder;
 
-    public ProdAdminSeeder(AccountRepository accountRepository, PasswordEncoder passwordEncoder) {
+    public ProdAdminSeeder(AccountRepository accountRepository) {
         this.accountRepository = accountRepository;
-        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
     public void run(String... args) {
-        if (accountRepository.count() > 0) {
+        String raw = System.getenv("ADMIN_BOOTSTRAP_EMAIL");
+        boolean hasEmail = raw != null && !raw.isBlank();
+
+        if (!hasEmail) {
+            if (accountRepository.count() == 0) {
+                throw new IllegalStateException(
+                        "Production deployment has no accounts and ADMIN_BOOTSTRAP_EMAIL is not set. "
+                        + "Set it to the identity-service email of the first admin and redeploy.");
+            }
             return;
         }
 
-        String username = System.getenv("ADMIN_BOOTSTRAP_USERNAME");
-        String password = System.getenv("ADMIN_BOOTSTRAP_PASSWORD");
+        String email = raw.trim().toLowerCase(Locale.ROOT);
+        if (accountRepository.findByEmail(email).isPresent()) {
+            return;
+        }
 
-        if (username == null || username.isBlank() || password == null || password.isBlank()) {
-            throw new IllegalStateException(
-                    "Production deployment has no accounts and ADMIN_BOOTSTRAP_USERNAME / " +
-                    "ADMIN_BOOTSTRAP_PASSWORD are not set. Set both environment variables and redeploy.");
+        String base = email.substring(0, email.indexOf('@') > 0 ? email.indexOf('@') : email.length());
+        String username = base.length() > 40 ? base.substring(0, 40) : base;
+        if (accountRepository.findByUsername(username).isPresent()) {
+            username = username + "-admin";
         }
 
         accountRepository.save(Account.builder()
                 .username(username)
-                .password(passwordEncoder.encode(password))
+                .email(email)
                 .role(Role.ADMIN)
                 .active(true)
                 .build());
 
-        System.out.println(">>> Bootstrap admin account created: " + username);
-        System.out.println(">>> Log in and use Accounts to create real driver/mechanic/manager logins.");
+        System.out.println(">>> Bootstrap admin created for " + email + ". Sign in through identity-service to link it.");
     }
 }

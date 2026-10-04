@@ -1,10 +1,12 @@
 import { useState, type FormEvent } from 'react'
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
+import { registerWithIdentity } from '../auth/tokens'
 
 export function LoginPage() {
   const { user, login } = useAuth()
-  const [username, setUsername] = useState('')
+  const [mode, setMode] = useState<'signin' | 'register'>('signin')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
@@ -18,7 +20,10 @@ export function LoginPage() {
     setError(null)
     setSubmitting(true)
     try {
-      await login(username, password)
+      if (mode === 'register') {
+        await registerWithIdentity(email, password)
+      }
+      await login(email, password)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed.')
     } finally {
@@ -40,14 +45,14 @@ export function LoginPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="username" className="mb-1 block font-sans text-sm font-medium text-graphite">
-              Username
+            <label htmlFor="email" className="mb-1 block font-sans text-sm font-medium text-graphite">
+              Email
             </label>
             <input
-              id="username"
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
               autoFocus
               className="w-full rounded border border-steel/40 bg-white px-3 py-2 font-mono text-sm text-graphite outline-none focus:border-safety focus:ring-2 focus:ring-safety/30"
@@ -79,13 +84,29 @@ export function LoginPage() {
             disabled={submitting}
             className="w-full rounded bg-graphite px-4 py-2 font-sans text-sm font-semibold uppercase tracking-wide text-paper transition hover:bg-graphite/90 disabled:opacity-50"
           >
-            {submitting ? 'Signing in…' : 'Sign in'}
+            {submitting
+              ? mode === 'register' ? 'Creating account…' : 'Signing in…'
+              : mode === 'register' ? 'Create account' : 'Sign in'}
           </button>
         </form>
 
-        <p className="mt-6 font-mono text-xs text-steel/70">
-          Dev accounts: driver1 / driver2 / mechanic1 / manager1 — password123
-        </p>
+        <button
+          type="button"
+          onClick={() => {
+            setMode(mode === 'signin' ? 'register' : 'signin')
+            setError(null)
+          }}
+          className="mt-4 font-sans text-sm text-steel underline hover:text-graphite"
+        >
+          {mode === 'signin' ? 'Create an account' : 'Already have an account? Sign in'}
+        </button>
+
+        {mode === 'register' && (
+          <p className="mt-3 font-sans text-xs text-steel">
+            New accounts need a FleetCheck administrator to assign a role before they can use the app.
+          </p>
+        )}
+
       </div>
     </div>
   )

@@ -6,7 +6,9 @@ import lombok.*;
 
 @Entity
 @Table(name = "accounts", uniqueConstraints = {
-        @UniqueConstraint(name = "uk_account_username", columnNames = "username")
+        @UniqueConstraint(name = "uk_account_username", columnNames = "username"),
+        @UniqueConstraint(name = "uk_account_email", columnNames = "email"),
+        @UniqueConstraint(name = "uk_account_identity_sub", columnNames = "identity_sub")
 })
 @Getter
 @Setter
@@ -19,11 +21,17 @@ public class Account {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // Display name only. Authentication happens in identity-service.
     @Column(nullable = false, length = 50)
     private String username;
 
-    @Column(nullable = false)
-    private String password;
+    // Stored lowercase. Nullable so rows created before SSO survive the schema update.
+    @Column(length = 255)
+    private String email;
+
+    // The identity-service subject. Set on the first successful login by email.
+    @Column(name = "identity_sub", length = 36)
+    private String identitySub;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)

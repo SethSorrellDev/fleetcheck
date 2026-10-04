@@ -17,7 +17,7 @@ export function AccountsPage() {
   const [loadError, setLoadError] = useState<string | null>(null)
 
   const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
+  const [email, setEmail] = useState('')
   const [role, setRole] = useState<Role | ''>('')
   const [driverId, setDriverId] = useState('')
 
@@ -50,7 +50,7 @@ export function AccountsPage() {
 
   function resetForm() {
     setUsername('')
-    setPassword('')
+    setEmail('')
     setRole('')
     setDriverId('')
     setSubmitError(null)
@@ -69,7 +69,7 @@ export function AccountsPage() {
     try {
       await api.post<Account>('/accounts', {
         username: username.trim(),
-        password,
+        email: email.trim(),
         role,
         driverId: role === 'DRIVER' && driverId ? Number(driverId) : null,
         active: true,
@@ -87,6 +87,7 @@ export function AccountsPage() {
     try {
       await api.put(`/accounts/${account.id}`, {
         username: account.username,
+        email: account.email,
         role: account.role,
         driverId: account.driverId,
         active: !account.active,
@@ -107,6 +108,7 @@ export function AccountsPage() {
     try {
       await api.put(`/accounts/${account.id}`, {
         username: account.username,
+        email: account.email,
         role: account.role,
         driverId: Number(selected),
         active: account.active,
@@ -146,14 +148,14 @@ export function AccountsPage() {
         </div>
 
         <div>
-          <label htmlFor="password" className="mb-1 block font-sans text-sm font-medium text-graphite">
-            Temporary Password
+          <label htmlFor="email" className="mb-1 block font-sans text-sm font-medium text-graphite">
+            Sign-in Email
           </label>
           <input
-            id="password"
-            type="text"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             required
             className="w-full rounded border border-steel/40 bg-white px-3 py-2 font-mono text-sm text-graphite outline-none focus:border-safety focus:ring-2 focus:ring-safety/30"
           />
@@ -233,6 +235,7 @@ export function AccountsPage() {
             <thead>
               <tr className="border-b border-steel/30 font-mono text-xs uppercase tracking-wider text-steel">
                 <th className="px-4 py-3">Username</th>
+                <th className="px-4 py-3">Email</th>
                 <th className="px-4 py-3">Role</th>
                 <th className="px-4 py-3">Linked Driver</th>
                 <th className="px-4 py-3">Status</th>
@@ -243,6 +246,7 @@ export function AccountsPage() {
               {accounts.map((a) => (
                 <tr key={a.id} className="border-b border-steel/10 last:border-0">
                   <td className="px-4 py-3 font-mono text-graphite">{a.username}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-steel">{a.email}</td>
                   <td className="px-4 py-3 font-mono text-xs text-steel">{roleLabels[a.role]}</td>
                   <td className="px-4 py-3 text-steel">
                     {a.role === 'DRIVER' && a.driverId === null ? (

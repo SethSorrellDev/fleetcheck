@@ -1,3 +1,5 @@
+import { AUTH_EXPIRED_EVENT, clearTokens, getAccessToken, refreshTokens } from '../auth/tokens'
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
 
 export interface ErrorResponse {
@@ -20,20 +22,28 @@ export class ApiError extends Error {
   }
 }
 
-function getAuthHeader(): string | null {
-  const raw = sessionStorage.getItem('fleetcheck-credentials')
-  return raw ? `Basic ${raw}` : null
+async function send(path: string, options: RequestInit): Promise<Response> {
+  const token = getAccessToken()
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...options.headers,
+  }
+  return fetch(`${API_BASE_URL}${path}`, { ...options, headers })
 }
 
 export async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const authHeader = getAuthHeader()
-  const headers: HeadersInit = {
-    'Content-Type': 'application/json',
-    ...(authHeader ? { Authorization: authHeader } : {}),
-    ...options.headers,
-  }
+  let response = await send(path, options)
 
-  const response = await fetch(`${API_BASE_URL}${path}`, { ...options, headers })
+  if (response.status === 401 && getAccessToken() !== null) {
+    if (await refreshTokens()) {
+      response = await send(path, options)
+    }
+    if (response.status === 401) {
+      clearTokens()
+      window.dispatchEvent(new Event(AUTH_EXPIRED_EVENT))
+    }
+  }
 
   if (response.status === 204) {
     return undefined as T

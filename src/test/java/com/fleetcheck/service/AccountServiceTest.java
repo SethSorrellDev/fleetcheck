@@ -5,7 +5,6 @@ import com.fleetcheck.domain.Driver;
 import com.fleetcheck.domain.enums.Role;
 import com.fleetcheck.dto.AccountDTO;
 import com.fleetcheck.exception.DuplicateResourceException;
-import com.fleetcheck.exception.InvalidRequestException;
 import com.fleetcheck.exception.ResourceNotFoundException;
 import com.fleetcheck.repository.AccountRepository;
 import com.fleetcheck.repository.DriverRepository;
@@ -15,13 +14,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -29,79 +30,79 @@ class AccountServiceTest {
 
     @Mock private AccountRepository accountRepository;
     @Mock private DriverRepository driverRepository;
-    @Mock private PasswordEncoder passwordEncoder;
 
     private AccountService service;
 
     @BeforeEach
     void setUp() {
-        service = new AccountService(accountRepository, driverRepository, passwordEncoder);
+        service = new AccountService(accountRepository, driverRepository);
     }
 
-    private AccountDTO dto(String password, Role role, Long driverId) {
-        return new AccountDTO(null, "newuser", password, role, driverId, true);
-    }
-
-    @Test
-    void create_throwsInvalidRequestException_whenPasswordBlank() {
-        assertThrows(InvalidRequestException.class, () -> service.create(dto("  ", Role.DRIVER, null)));
+    private AccountDTO dto(String email, Role role, Long driverId) {
+        return new AccountDTO(null, "newuser", email, role, driverId, true);
     }
 
     @Test
-    void create_hashesPasswordAndSaves_happyPath() {
-        when(passwordEncoder.encode("secret123")).thenReturn("HASHED");
+    void create_normalizesEmailAndSaves_happyPath() {
         when(accountRepository.save(any(Account.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        AccountDTO result = service.create(dto("secret123", Role.MECHANIC, null));
+        AccountDTO result = service.create(dto("  New.User@Example.COM ", Role.MECHANIC, null));
 
-        assertThat(result.username()).isEqualTo("newuser");
+        assertThat(result.email()).isEqualTo("new.user@example.com");
         assertThat(result.role()).isEqualTo(Role.MECHANIC);
-        assertThat(result.password()).isNull();
+        assertThat(result.driverId()).isNull();
     }
 
     @Test
-    void create_linksDriver_whenDriverIdProvided() {
-        Driver driver = Driver.builder().id(5L).firstName("Test").lastName("Driver").employeeId("E1").active(true).build();
-        when(driverRepository.findById(5L)).thenReturn(Optional.of(driver));
-        when(passwordEncoder.encode("secret123")).thenReturn("HASHED");
+    void create_linksDriver_whenDriverIdGiven() {
+        Driver driver = mock(Driver.class);
+        when(driver.getId()).thenReturn(7L);
+        when(driverRepository.findById(7L)).thenReturn(Optional.of(driver));
         when(accountRepository.save(any(Account.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        AccountDTO result = service.create(dto("secret123", Role.DRIVER, 5L));
+        AccountDTO result = service.create(dto("driver@example.com", Role.DRIVER, 7L));
 
-        assertThat(result.driverId()).isEqualTo(5L);
+        assertThat(result.driverId()).isEqualTo(7L);
     }
 
     @Test
-    void create_throwsResourceNotFoundException_whenDriverIdMissing() {
+    void create_throwsResourceNotFound_whenDriverMissing() {
         when(driverRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> service.create(dto("secret123", Role.DRIVER, 99L)));
+        assertThatThrownBy(() -> service.create(dto("driver@example.com", Role.DRIVER, 99L)))
+                .isInstanceOf(ResourceNotFoundException.class);
+        verify(accountRepository, never()).save(any());
     }
 
     @Test
-    void create_throwsDuplicateResourceException_onUniqueConstraintViolation() {
-        when(passwordEncoder.encode("secret123")).thenReturn("HASHED");
+    void create_throwsDuplicate_onConstraintViolation() {
         when(accountRepository.save(any(Account.class))).thenThrow(new DataIntegrityViolationException("dup"));
 
-        assertThrows(DuplicateResourceException.class, () -> service.create(dto("secret123", Role.MECHANIC, null)));
+        assertThatThrownBy(() -> service.create(dto("dup@example.com", Role.MECHANIC, null)))
+                .isInstanceOf(DuplicateResourceException.class);
     }
 
     @Test
-    void update_keepsExistingPassword_whenPasswordOmitted() {
-        Account existing = Account.builder().id(1L).username("olduser").password("OLD_HASH").role(Role.DRIVER).active(true).build();
+    void update_changesFields_andKeepsIdentityLink() {
+        Account existing = Account.builder().id(1L).username("olduser").email("old@example.com")
+                .identitySub("sub-1").role(Role.DRIVER).active(true).build();
         when(accountRepository.findById(1L)).thenReturn(Optional.of(existing));
         when(accountRepository.save(any(Account.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        service.update(1L, dto(null, Role.MECHANIC, null));
+        service.update(1L, new AccountDTO(1L, "newname", "New@Example.com", Role.MECHANIC, null, false));
 
-        assertThat(existing.getPassword()).isEqualTo("OLD_HASH");
+        assertThat(existing.getUsername()).isEqualTo("newname");
+        assertThat(existing.getEmail()).isEqualTo("new@example.com");
         assertThat(existing.getRole()).isEqualTo(Role.MECHANIC);
+        assertThat(existing.isActive()).isFalse();
+        assertThat(existing.getIdentitySub()).isEqualTo("sub-1");
     }
 
     @Test
-    void update_throwsResourceNotFoundException_whenAccountMissing() {
-        when(accountRepository.findById(1L)).thenReturn(Optional.empty());
+    void update_throwsResourceNotFound_whenAccountMissing() {
+        when(accountRepository.findById(5L)).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> service.update(1L, dto(null, Role.MECHANIC, null)));
+        assertThatThrownBy(() -> service.update(5L, dto("x@example.com", Role.DRIVER, null)))
+                .isInstanceOf(ResourceNotFoundException.class);
     }
 }
