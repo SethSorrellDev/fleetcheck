@@ -8,3 +8,4 @@ target/
 *.log
 .env
 *.db
+__pycache__/

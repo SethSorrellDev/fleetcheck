@@ -1,0 +1,40 @@
+{
+  "vehicles": [
+    {"unitNumber": "SMP-101", "vehicleType": "STEP_VAN", "make": "Freightliner", "model": "MT45", "year": 2021, "licensePlate": "SAMPLE-101", "assignedRoute": "Sample Route 12", "currentOdometer": 58230},
+    {"unitNumber": "SMP-102", "vehicleType": "STEP_VAN", "make": "Isuzu", "model": "NPR-HD", "year": 2020, "licensePlate": "SAMPLE-102", "assignedRoute": "Sample Route 14", "currentOdometer": 71410},
+    {"unitNumber": "SMP-103", "vehicleType": "BOX_TRUCK", "make": "Ford", "model": "F-650", "year": 2019, "licensePlate": "SAMPLE-103", "assignedRoute": "Sample Route 18", "currentOdometer": 96880},
+    {"unitNumber": "SMP-104", "vehicleType": "STEP_VAN", "make": "Ram", "model": "ProMaster 3500", "year": 2022, "licensePlate": "SAMPLE-104", "assignedRoute": "Sample Route 21", "currentOdometer": 33105},
+    {"unitNumber": "SMP-105", "vehicleType": "BOX_TRUCK", "make": "Hino", "model": "L6", "year": 2018, "licensePlate": "SAMPLE-105", "assignedRoute": "Sample Route 30", "currentOdometer": 124700}
+  ],
+  "drivers": [
+    {"employeeId": "SMP-D01", "firstName": "Jordan", "lastName": "Avery"},
+    {"employeeId": "SMP-D02", "firstName": "Priya", "lastName": "Nair"},
+    {"employeeId": "SMP-D03", "firstName": "Marcus", "lastName": "Lee"},
+    {"employeeId": "SMP-D04", "firstName": "Elena", "lastName": "Ortiz"}
+  ],
+  "reports": [
+    {"key": "r1", "unit": "SMP-101", "driver": "SMP-D01", "daysAgo": 9, "odometer": 58010, "satisfactory": true, "requiresRepair": false, "outcome": "SATISFACTORY"},
+    {"key": "r2", "unit": "SMP-102", "driver": "SMP-D02", "daysAgo": 9, "odometer": 71190, "satisfactory": true, "requiresRepair": false, "outcome": "SATISFACTORY"},
+    {"key": "r3", "unit": "SMP-103", "driver": "SMP-D03", "daysAgo": 8, "odometer": 96510, "satisfactory": false, "requiresRepair": true, "repairType": "NON_SAFETY", "repairDescription": "Cargo door latch sticks when cold.",
+     "outcome": "REVIEWED_CLOSED", "repairWork": "Cleaned and lubricated the cargo door latch, replaced the return spring.",
+     "damage": [{"damageType": "SCRATCH", "viewAngle": "SIDE", "x": 120.5, "y": 84.0, "notes": "Light scrape near the rear door"}]},
+    {"key": "r4", "unit": "SMP-104", "driver": "SMP-D04", "daysAgo": 7, "odometer": 32880, "satisfactory": false, "requiresRepair": true, "repairType": "SAFETY", "repairDescription": "Left rear brake light out.",
+     "outcome": "REVIEWED_CLOSED", "repairWork": "Replaced the left rear brake light bulb and socket. Verified operation with the brake pedal.",
+     "damage": [{"damageType": "BROKEN", "viewAngle": "REAR", "x": 64.0, "y": 52.5, "notes": "Lens cracked around the bulb"}]},
+    {"key": "r5", "unit": "SMP-105", "driver": "SMP-D01", "daysAgo": 5, "odometer": 124410, "satisfactory": false, "requiresRepair": true, "repairType": "BOTH", "repairDescription": "Windshield chip growing, and the wipers streak badly.",
+     "outcome": "REPAIR_COMPLETED", "repairWork": "Replaced both wiper blades and sealed the windshield chip with resin.",
+     "damage": [{"damageType": "CHIP", "viewAngle": "FRONT", "x": 96.0, "y": 40.0, "notes": "Passenger side, about the size of a dime"}]},
+    {"key": "r6", "unit": "SMP-102", "driver": "SMP-D02", "daysAgo": 3, "odometer": 71350, "satisfactory": false, "requiresRepair": true, "repairType": "NON_SAFETY", "repairDescription": "Driver side mirror housing cracked.",
+     "outcome": "ORDER_DRAFTED", "repairWork": "Ordered replacement mirror housing; install pending delivery.",
+     "damage": [{"damageType": "BROKEN", "viewAngle": "SIDE", "x": 38.0, "y": 61.0, "notes": "Mirror housing cracked, glass intact"}]},
+    {"key": "r7", "unit": "SMP-103", "driver": "SMP-D03", "daysAgo": 2, "odometer": 96790, "satisfactory": false, "requiresRepair": true, "repairType": "SAFETY", "repairDescription": "Air brake pressure drops faster than normal overnight.",
+     "outcome": "REPAIR_REQUESTED",
+     "damage": []},
+    {"key": "r8", "unit": "SMP-101", "driver": "SMP-D04", "daysAgo": 1, "odometer": 58190, "satisfactory": false, "requiresRepair": true, "repairType": "NON_SAFETY", "repairDescription": "Dent in the rear bumper and a loose interior shelf bracket.",
+     "outcome": "REPAIR_REQUESTED",
+     "damage": [{"damageType": "DENT", "viewAngle": "REAR", "x": 70.0, "y": 118.0, "notes": "Bumper, left of center"},
+                {"damageType": "RUST", "viewAngle": "SIDE", "x": 150.0, "y": 130.0, "notes": "Small spot on the rocker panel"}]},
+    {"key": "r9", "unit": "SMP-104", "driver": "SMP-D01", "daysAgo": 0, "odometer": 33100, "satisfactory": true, "requiresRepair": false, "outcome": "SATISFACTORY"},
+    {"key": "r10", "unit": "SMP-105", "driver": "SMP-D02", "daysAgo": 0, "odometer": 124690, "satisfactory": true, "requiresRepair": false, "outcome": "SATISFACTORY"}
+  ]
+}

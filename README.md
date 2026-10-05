@@ -111,6 +111,18 @@ To sign in locally, run identity-service on `http://localhost:8081` (the default
 
 **API docs:** interactive Swagger UI at `http://localhost:8080/swagger-ui.html` once the backend is running.
 
+## Sample data
+
+`scripts/seed_sample.py` loads a fully fictional fleet (five vehicles, four drivers, ten inspection reports, repair orders and damage markings) into a running backend through its API, covering every stage of the inspection workflow plus one open safety repair that blocks dispatch. Unit numbers are `SMP-xxx` and nothing in `scripts/sample_data.json` is real. FleetCheck only stores roles, and each write is limited to one role, so the script acts as you (an existing admin) plus three sample accounts it creates: a manager, a driver and a mechanic. It is standard-library Python and idempotent; `--remove` deletes the sample records and deactivates the sample accounts.
+
+```bash
+export FLEETCHECK_URL=https://fleetcheck-j4y2.onrender.com
+export IDENTITY_URL=https://identity-service-c5ab.onrender.com
+export SEED_ADMIN_EMAIL=you@example.com     # an active ADMIN account
+python3 scripts/seed_sample.py              # prompts for passwords
+python3 -m unittest scripts/test_seed_sample.py   # checks the script against a stub API
+```
+
 ## Running tests
 
 ```bash
