@@ -4,7 +4,7 @@ React + TypeScript SPA for [FleetCheck](../README.md) — the driver/mechanic/fl
 
 ## Tech stack
 
-React 18, TypeScript, Vite, React Router, Tailwind CSS v4. Tests with Vitest + React Testing Library.
+React 19, TypeScript, Vite, React Router, Tailwind CSS v4. Tests with Vitest + React Testing Library.
 
 ## Structure
 
@@ -48,7 +48,7 @@ npm install
 npm run dev
 ```
 
-Runs on `http://localhost:5173`. Vite's dev server proxies `/api/*` to `http://localhost:8080` (see `vite.config.ts`), so no `.env` is needed for local development — just have the backend running.
+Runs on `http://localhost:5173`. Vite's dev server proxies `/api/*` to `http://localhost:8080` (see `vite.config.ts`), so no `.env` is needed for local development — just have the backend running, plus identity-service on `http://localhost:8081` for sign-in.
 
 ## Testing
 
@@ -65,7 +65,7 @@ Vitest + React Testing Library, `jsdom` environment. Covers the API client's err
 npm run build
 ```
 
-Type-checks (`tsc -b`) then builds a static bundle to `dist/`. The only runtime configuration is where the API lives:
+Type-checks (`tsc -b`) then builds a static bundle to `dist/`. Two build-time variables set where the API and the identity service live:
 
 | Variable | Purpose |
 |---|---|

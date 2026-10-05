@@ -4,7 +4,9 @@
 
 **Live demo:** [fleetcheck-1.onrender.com](https://fleetcheck-1.onrender.com) — backend API at [fleetcheck-j4y2.onrender.com](https://fleetcheck-j4y2.onrender.com)
 
-Hosted on Render's free tier, so the first request after a period of inactivity may take 30-60 seconds to wake up.
+Hosted on Render's free tier, so the first request after a period of inactivity may take 30-60 seconds to wake up. The shared identity service that handles sign-in runs on an always-on paid instance, so sign-in itself never waits on a cold start.
+
+**Demo access:** available on request. Access is role-based: a sign-in only sees FleetCheck once an admin has added that email on the Accounts page.
 
 A digital Driver Vehicle Inspection Report (DVIR) system built to replace a paper-and-carbon-copy process at a Cintas route-service operation.
 
@@ -21,7 +23,7 @@ Drivers currently fill out a paper DVIR booklet at the start and end of every sh
 - **Mechanic repair queue** — an actionable, three-stage queue (needs repair order → ready to complete → awaiting driver review), not just a filtered list
 - **Fleet & vehicle history views** — a fleet-wide dispatch-status table and a full per-vehicle inspection/repair/damage timeline
 - **Account administration** — admin-only user management with deactivation (not hard-delete), write-only password handling
-- **Test coverage** — 37 backend tests (JUnit 5 + Mockito unit tests on the workflow engine; MockMvc + Spring Security Test integration tests exercising the full DVIR lifecycle through real HTTP and real authorization rules) and 22 frontend tests (Vitest + React Testing Library)
+- **Test coverage** — 36 backend tests (JUnit 5 + Mockito unit tests on the workflow engine; MockMvc + Spring Security Test integration tests exercising the full DVIR lifecycle through real HTTP and real authorization rules) and 31 frontend tests (Vitest + React Testing Library)
 - **CI/CD** — GitHub Actions runs the full test suite on every push and pull request; deployed on Render with a separate production Spring profile, PostgreSQL, and CORS-aware cross-origin setup
 
 ## Inspection report workflow
@@ -48,7 +50,7 @@ A vehicle stays blocked from dispatch for any open `SAFETY`/`BOTH` repair until 
 | Layer | Stack |
 |---|---|
 | Backend | Java 21, Spring Boot 3.5, Spring Data JPA, Spring Security, H2 (dev) / PostgreSQL (prod) |
-| Frontend | React 18, TypeScript, Vite, Tailwind CSS v4 |
+| Frontend | React 19, TypeScript, Vite, Tailwind CSS v4 |
 | Testing | JUnit 5, Mockito, MockMvc, Spring Security Test, Vitest, React Testing Library |
 | CI/CD | GitHub Actions, Render (web service + static site + managed Postgres) |
 
@@ -136,11 +138,12 @@ Deployed on Render: a Dockerized Spring Boot web service, a React static site, a
 
 Once the bootstrap admin has signed in, use the Accounts page to add driver/mechanic/manager roles by email. Each person creates their identity-service account with that same email (the login page has a **Create an account** link). The frontend needs `VITE_IDENTITY_URL` set at build time, and identity-service must list the frontend's origin in its `CORS_ALLOWED_ORIGINS`.
 
-**Frontend** is a static site build (`npm run build`) with one build-time variable:
+**Frontend** is a static site build (`npm run build`) with two build-time variables:
 
 | Variable | Purpose |
 |---|---|
 | `VITE_API_BASE_URL` | Base URL of the deployed backend API |
+| `VITE_IDENTITY_URL` | Base URL of identity-service, used for sign-in |
 
 ## Roadmap
 
